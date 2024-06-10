@@ -1,6 +1,7 @@
 import CryptoJS from "crypto-js";
 import client from "./connection.js";
 import dotenv from "dotenv";
+import { connect } from "http2";
 
 
 class UsersDAO {
@@ -10,64 +11,259 @@ class UsersDAO {
 
     }
 
-    addUser(userDTO) {
-        return new Promise((resolve, reject) => {
-            try {
-                client.connect() ;
-                const collection = client.db("bd_password_manager").collection("users") ;
-                 
-                collection.insertOne(userDTO) ;
-
-                resolve(userDTO) ;
-            } catch (err) {
-                reject(new Error("There's a problem with the connection...")) ;
-            } 
-        }) ;
-    }
-
-    addAccount(email, account) {
-        return new Promise((resolve, reject) => {
-            try {
-                client.connect() ;
-                const collection = client.db("bd_password_manager").collection("users") ;
-                 
-                collection
-
-                resolve(userDTO) ;
-            } catch (err) {
-                reject(new Error("There's a problem with the connection...")) ;
-            } finally {
-                client.close() ;
+    async addUser(userDTO) {
+        try {
+            await client.connect();
+            
+            const collection = client.db("bd_password_manager").collection("users");
+    
+            const existingUser = await collection.findOne({ "email": userDTO.email });
+    
+            if (existingUser) {
+                throw new Error("There's already a User with this email!");
+            } else {
+                await collection.insertOne(userDTO);
+                return userDTO;
             }
-        }) ;
+        } catch (error) {
+            throw new Error("There's a problem with the connection...");
+        } finally {
+            client.close();
+        }
     }
 
-    getUser() {
+    async addAccount(email, account) {
+        try {
+            await client.connect() ;
 
+            const collection = client.db("bd_password_manager").collection("users");
+
+            const userBD = await collection.findOne({ "email": email });
+
+            if (userBD) {
+                await collection.updateOne(
+                    { "email": email },
+                    { $push: { "accounts": account } }
+                );
+                return true;
+            } else {
+                return new Error("There's an error with your data...");
+            }
+        } catch (error) {
+            throw new Error("There's a problem with the connection...") ;
+        } finally {
+            client.close() ;
+        }
     }
 
-    getAccountUser() {
+    async getUser(email, password) {
+        try {
+            await client.connect() ;
 
+            const collection = client.db("bd_password_manager").collection("users") ;
+
+            const existingUser = await collection.findOne(
+                {
+                "email": email,
+                "password": password
+                }
+            ) ;
+
+            if(existingUser) {
+                return existingUser ;
+            } else {
+                throw new Error("Your email or password is wrong...") ;
+            }
+
+        } catch (error) {
+            throw new Error("There's a problem with the connection...") ;
+        } finally {
+            client.close() ;
+        }
     }
 
-    getAccountPassword() {
-        
+    async getAccountsNames(email) {
+        try {
+            await client.connect() ;
+
+            const collection = client.db("bd_password_manager").collection("users") ;
+
+            const existingUser = await collection.findOne(
+                {
+                "email": email
+                }
+            ) ;
+
+            if(existingUser) {
+                const names = [] ;
+
+                existingUser.accounts.forEach(account => {
+                    names.push(account.name) ;
+                });
+
+                return names ;
+            } else {
+                throw new Error("There's an error with your data...") ;
+            }
+
+        } catch (error) {
+            throw new Error("There's a problem with the connection...") ;
+        } finally {
+            client.close() ;
+        }
+    }
+
+    async getAccountUser(email, name) {
+        try {
+            await client.connect() ;
+
+            const collection = client.db("bd_password_manager").collection("users") ;
+
+            const existingUser = await collection.findOne(
+                {
+                "email": email
+                }
+            ) ;
+
+            if(existingUser) {
+                let user = "" ;
+                existingUser.accounts.forEach(account => {
+                    if(account.name.toLowerCase() == name.toLowerCase()) {
+                        user = account.user ;
+                    }
+                });
+                return user ;
+            } else {
+                throw new Error("There's an error with your data...") ;
+            }
+
+        } catch (error) {
+            throw new Error("There's a problem with the connection...") ;
+        } finally {
+            client.close() ;
+        }
+    }
+
+    async getAccountPassword(email, name) {
+        try {
+            await client.connect() ;
+
+            const collection = client.db("bd_password_manager").collection("users") ;
+
+            const existingUser = await collection.findOne(
+                {
+                "email": email
+                }
+            ) ;
+
+            if(existingUser) {
+                let password = "" ;
+                existingUser.accounts.forEach(account => {
+                    if(account.name.toLowerCase() == name.toLowerCase()) {
+                        password = account.password ;
+                    }
+                });
+                return password ;
+            } else {
+                throw new Error("There's an error with your data...") ;
+            }
+
+        } catch (error) {
+            throw new Error("There's a problem with the connection...") ;
+        } finally {
+            client.close() ;
+        }
     }
 
     existUser() {
 
     }
 
-    changePassword() {
+    async changePassword(email, password) {
+        try {
+            await client.connect() ;
 
+            const collection = client.db("bd_password_manager").collection("users") ;
+
+            const existingUser = await collection.findOne(
+                {
+                "email": email
+                }
+            ) ;
+
+            if(existingUser) {
+                
+                await collection.updateOne(
+                    {
+                        "email": email
+                    }, 
+                    {
+                        $set : { "password": password }
+                    }
+                ) ;
+
+                return true ;
+            } else {
+                throw new Error("There's an error with your data...") ;
+            }
+
+        } catch (error) {
+            throw new Error("There's a problem with the connection...") ;
+        } finally {
+            client.close() ;
+        }
     }
 
-    editAccount() {
+    async editAccount(email, newAccount) {
+        try {
+            await client.connect() ;
 
+            const collection = client.db("bd_password_manager").collection("users") ;
+
+            const existingUser = await collection.findOne(
+                {
+                "email": email
+                }
+            ) ;
+
+            if(existingUser) {
+                
+                const accountIndex = existingUser.accounts.findIndex(account => account.name.toLowerCase() == newAccount.name.toLowerCase()) ;
+
+                if(accountIndex != -1) {
+
+                    existingUser.accounts[accountIndex] = {
+                        "name": newAccount.name,
+                        "user": newAccount.user,
+                        "password": newAccount.password
+                    }
+
+                    await collection.updateOne(
+                        {
+                            "email": email
+                        },
+                        {
+                            $set: {"accounts": existingUser.accounts}
+                        }
+                    ) ;
+                    
+                    return true ;
+                } else {
+                    throw new Error("There's a problem editing your account...")
+                }
+            } else {
+                throw new Error("There's an error with your data...") ;
+            }
+
+        } catch (error) {
+            throw new Error("There's a problem with the connection...") ;
+        } finally {
+            client.close() ;
+        }
     }
 
     deleteAccount() {
-
+        
     }
 
 }
