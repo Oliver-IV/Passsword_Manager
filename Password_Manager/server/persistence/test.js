@@ -1,5 +1,5 @@
 import UserDTO from "../dtos/UserDTO.js";
-import UsersDAO from "./usersDAO.js";
+import UsersDAO from "./UsersDAO.js";
 import client from "./connection.js"
 import AccountDTO from "../dtos/AccountDTO.js"
 
@@ -45,7 +45,19 @@ const usersDAO = new UsersDAO() ;
 //     console.log(err) ;
 //  }) ;
 
-usersDAO.changePassword("companacho@gmail.com", "elnacho666").then((result) => {
+// usersDAO.changePassword("companacho@gmail.com", "elnacho666").then((result) => {
+//     console.log(result) ;
+// }).catch(err => {
+//     console.log(err) ;
+// }) ;
+
+// usersDAO.editAccount("companacho@gmail.com", new AccountDTO("Netflix", "companacho@gmail.com", "vivacristorey")).then(result => {
+//     console.log(result) ;
+// }).catch(err => {
+//     console.log(err) ;
+// }) ;
+
+usersDAO.deleteAccount("companacho@gmail.com", "Netflix").then(result => {
     console.log(result) ;
 }).catch(err => {
     console.log(err) ;

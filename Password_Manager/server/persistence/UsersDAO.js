@@ -28,7 +28,7 @@ class UsersDAO {
         } catch (error) {
             throw new Error("There's a problem with the connection...");
         } finally {
-            client.close();
+            await client.close() ;
         }
     }
 
@@ -52,7 +52,7 @@ class UsersDAO {
         } catch (error) {
             throw new Error("There's a problem with the connection...") ;
         } finally {
-            client.close() ;
+            await client.close() ;
         }
     }
 
@@ -78,7 +78,7 @@ class UsersDAO {
         } catch (error) {
             throw new Error("There's a problem with the connection...") ;
         } finally {
-            client.close() ;
+            await client.close() ;
         }
     }
 
@@ -109,7 +109,7 @@ class UsersDAO {
         } catch (error) {
             throw new Error("There's a problem with the connection...") ;
         } finally {
-            client.close() ;
+            await client.close() ;
         }
     }
 
@@ -140,7 +140,7 @@ class UsersDAO {
         } catch (error) {
             throw new Error("There's a problem with the connection...") ;
         } finally {
-            client.close() ;
+            await client.close() ;
         }
     }
 
@@ -171,7 +171,7 @@ class UsersDAO {
         } catch (error) {
             throw new Error("There's a problem with the connection...") ;
         } finally {
-            client.close() ;
+            await client.close() ;
         }
     }
 
@@ -210,10 +210,10 @@ class UsersDAO {
         } catch (error) {
             throw new Error("There's a problem with the connection...") ;
         } finally {
-            client.close() ;
+            await client.close() ;
         }
     }
-
+    
     async editAccount(email, newAccount) {
         try {
             await client.connect() ;
@@ -258,12 +258,47 @@ class UsersDAO {
         } catch (error) {
             throw new Error("There's a problem with the connection...") ;
         } finally {
-            client.close() ;
+            await client.close() ;
         }
     }
 
-    deleteAccount() {
-        
+    async deleteAccount(email, name) {
+        try {
+            await client.connect() ;
+
+            const collection = client.db("bd_password_manager").collection("users") ;
+
+            const existingUser = await collection.findOne(
+                {
+                "email": email
+                }
+            ) ;
+
+            if(existingUser) {
+                
+                const accountIndex = existingUser.accounts.findIndex(account => account.name.toLowerCase() == name.toLowerCase()) ;
+
+                if(accountIndex != -1) {
+
+                    await collection.updateOne(
+                        { "email": email },
+                        { $pull: { accounts: { name: name } } }
+                    );
+                    
+                    return true ;
+                } else {
+                    throw new Error("There's a problem editing your account...")
+                }
+            } else {
+                throw new Error("There's an error with your data...") ;
+            }
+
+        } catch (error) {
+            console.log(error) ;
+            throw new Error("There's a problem with the connection...") ;
+        } finally {
+            await client.close() ;
+        }
     }
 
 }
