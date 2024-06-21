@@ -59,7 +59,7 @@ class UsersDAO {
     async getUser(email, password) {
         try {
             await client.connect() ;
-
+            
             const collection = client.db("bd_password_manager").collection("users") ;
 
             const existingUser = await collection.findOne(
