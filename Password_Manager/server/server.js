@@ -6,14 +6,14 @@ import cookieParser from "cookie-parser";
 import { PORT } from "./utils/config.js"
 import jwt from "jsonwebtoken" ;
 import dotenv from "dotenv" ;
-import login from "./utils/controllers/authentication.js"
-import createUser from "./utils/controllers/authentication.js"
+import { login, createUser, getAccountsNames, getPassword, getUser } from "./utils/controllers/authentication.js"
 
 dotenv.config() ;
 const __dirName = path.dirname(fileURLToPath(import.meta.url)) ;
 const publicPath = path.join(__dirName, "../public") ;
 const app = express() ;
 
+app.set("view engine", "ejs")
 app.use(bodyParser.urlencoded({extended: true})) ;
 app.use(express.static(publicPath)) ;
 app.use(express.json()) ;
@@ -23,6 +23,7 @@ app.use((req, res, next) => {
     req.session = {user: null} ;
     try {
         const data = jwt.verify(token, process.env.SECRET_KEY) ;
+        data.accounts = "" ;
         req.session.user = data ;
     } catch (error) {
 
@@ -58,7 +59,15 @@ app.get("/menu", (req, res) => {
     const { user } = req.session ;
 
     if(user) {
-        res.sendFile(publicPath + "/pages/menu.html") ;
+        getAccountsNames(user.email).then(results => {
+            if(user) {
+                res.render(publicPath + "/pages/menu", {accounts: results}) ;
+            } else {
+                res.redirect("/auth/signin") ;
+            }
+        }).catch(err => {
+    
+        }) ;
     } else {
         res.redirect("/auth/signin") ;
     }
@@ -71,6 +80,14 @@ app.get("/auth/signin", (req, res) => {
 
 app.get("/auth/logout", (req, res) => {
     res.sendFile(publicPath + "/pages/logout.html") ;
+}) ;
+
+app.get("/account/user", (req, res) => {
+    getUser(req, res) ;
+}) ;
+
+app.get("/account/password", (req, res) => {
+    getPassword(req, res) ;
 }) ;
 
 app.post("/login", (req, res) => {

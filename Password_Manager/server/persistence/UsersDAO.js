@@ -22,6 +22,7 @@ class UsersDAO {
             if (existingUser) {
                 throw new Error("There's already a User with this email!");
             } else {
+                userDTO.password = encrypytAES(userDTO.password) ;
                 await collection.insertOne(userDTO);
                 return userDTO;
             }
@@ -41,6 +42,7 @@ class UsersDAO {
             const userBD = await collection.findOne({ "email": email });
 
             if (userBD) {
+                account.password = encrypytAES(account.password) ;
                 await collection.updateOne(
                     { "email": email },
                     { $push: { "accounts": account } }
@@ -64,12 +66,11 @@ class UsersDAO {
 
             const existingUser = await collection.findOne(
                 {
-                "email": email,
-                "password": password
+                "email": email
                 }
             ) ;
 
-            if(existingUser) {
+            if(existingUser && decryptAES(existingUser.password) == password) {
                 return existingUser ;
             } else {
                 throw new Error("Your email or password is wrong...") ;
@@ -163,7 +164,7 @@ class UsersDAO {
                         password = account.password ;
                     }
                 });
-                return password ;
+                return decryptAES(password) ;
             } else {
                 throw new Error("There's an error with your data...") ;
             }

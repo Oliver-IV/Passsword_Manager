@@ -4,7 +4,7 @@ const inputName = document.getElementById("name") ;
 const inputLastName = document.getElementById("lastName") ;
 const inputMotherLastName = document.getElementById("motherLastName") ;
 const inputconfirmPassword = document.getElementById("confirmPassword") ;
-const btnCreateAcc = document.getElementById("login") ;
+const btnCreateAcc = document.getElementById("createAcc") ;
 
 function createAccount() {
     const body = {
@@ -40,3 +40,11 @@ function createAccount() {
     });
 
 }
+
+const init = () => {
+    btnCreateAcc.onclick = () => {
+        createAccount() ;
+    };
+} ;
+
+init() ;

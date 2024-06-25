@@ -1,7 +1,7 @@
-import UserDTO from "../dtos/UserDTO.js";
-import UsersDAO from "./UsersDAO.js";
-import client from "./connection.js"
-import AccountDTO from "../dtos/AccountDTO.js"
+import UserDTO from "./dtos/UserDTO.js";
+import UsersDAO from "./persistence/UsersDAO.js";
+import client from "./persistence/connection.js"
+import AccountDTO from "./dtos/AccountDTO.js"
 
 const usersDAO = new UsersDAO() ; 
 
@@ -13,13 +13,13 @@ const usersDAO = new UsersDAO() ;
 //     console.log(err) ; 
 // });
 
-//   usersDAO.addAccount("companacho@gmail.com", new AccountDTO("Prime Video", "companacho@gmail.com", "diossiexiste"))
-//   .then((result) => {
-//       console.log(result) ;
-//   })
-//   .catch(err => {
-//       console.log(err) ; 
-//   });
+   usersDAO.addAccount("mochila@gmail.com", new AccountDTO("Playstation", "mochila@gmail.com", "diosnoexiste"))
+   .then((result) => {
+       console.log(result) ;
+   })
+   .catch(err => {
+       console.log(err) ; 
+   });
 
 // usersDAO.getUser("companacho@gmail.com", "companacho777").then((results) => {
 //     console.log(results) ;
@@ -57,8 +57,8 @@ const usersDAO = new UsersDAO() ;
 //     console.log(err) ;
 // }) ;
 
-usersDAO.deleteAccount("companacho@gmail.com", "Netflix").then(result => {
-    console.log(result) ;
-}).catch(err => {
-    console.log(err) ;
-}) ;
+// usersDAO.deleteAccount("companacho@gmail.com", "Netflix").then(result => {
+//     console.log(result) ;
+// }).catch(err => {
+//     console.log(err) ;
+// }) ;

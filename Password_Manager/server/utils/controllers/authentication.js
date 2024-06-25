@@ -57,4 +57,29 @@ function createUser(req, res) {
     }) ;
 } 
 
-export default { login, createUser } ;
+function getAccountsNames(email) {
+    return usersDAO.getAccountsNames(email) ;
+}
+
+function getUser(req, res) {
+    const { user } = req.session ;
+    const name = req.query.name ;
+    
+    usersDAO.getAccountUser(user.email, name).then(results => {
+        res.status(200).send(results) ;
+    }).catch(err => {
+        res.status(400).send(err) ;
+    }) ;
+}
+
+function getPassword(req, res) {
+    const { user } = req.session ;
+    const password = req.query.password ;
+    
+    usersDAO.getAccountPassword(user.email, password).then(results => {
+        res.status(200).send(results) ;
+    }).catch(err => {
+        res.status(400).send(err) ;
+    }) ;
+}
+export { login, createUser, getAccountsNames, getUser, getPassword } ;

@@ -17,7 +17,6 @@ function login() {
         }
     ).then(response => {
         if(response.ok) {
-            alert(response) ;
             window.location.href = "/menu"
         } else {
             return response.text().then(errorMessage => {
