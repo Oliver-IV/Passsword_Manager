@@ -1,12 +1,13 @@
 import express from "express" ;
 import bodyParser from "body-parser";
-import path from "path";
+import path, { delimiter } from "path";
 import { fileURLToPath } from "url";
 import cookieParser from "cookie-parser";
 import { PORT } from "./utils/config.js"
 import jwt from "jsonwebtoken" ;
 import dotenv from "dotenv" ;
-import { login, createUser, getAccountsNames, getPassword, getUser } from "./utils/controllers/authentication.js"
+import { login, createUser, getAccountsNames, getPassword, getUser, addAccount, deleteAccount, editAccount } from "./utils/controllers/authentication.js"
+import { addAbortSignal } from "stream";
 
 dotenv.config() ;
 const __dirName = path.dirname(fileURLToPath(import.meta.url)) ;
@@ -75,27 +76,62 @@ app.get("/menu", (req, res) => {
 }) ;
 
 app.get("/auth/signin", (req, res) => {
-    res.sendFile(publicPath + "/pages/signin.html")
+    res.status(401).sendFile(publicPath + "/pages/signin.html") ;
 }) ;
 
 app.get("/auth/logout", (req, res) => {
-    res.sendFile(publicPath + "/pages/logout.html") ;
+    res.status(401).sendFile(publicPath + "/pages/logout.html") ;
 }) ;
 
 app.get("/account/user", (req, res) => {
-    getUser(req, res) ;
+    const { user } = req.session ;
+
+    if (user) {
+        getUser(req, res) ;
+    } else {
+        res.redirect("/auth/signin") ;
+    }
 }) ;
 
 app.get("/account/password", (req, res) => {
-    getPassword(req, res) ;
+    const { user } = req.session ;
+
+    if (user) {
+        getPassword(req, res) ;
+    } else {
+        res.redirect("/auth/signin") ;
+    }
 }) ;
 
 app.post("/login", (req, res) => {
-    login(req, res) ;
+    const { user } = req.session ;
+    
+    if(!user) {
+        login(req, res) ;
+    } else {
+        res.status(401).redirect("/menu") ;
+    }
+    
 }) ;
 
 app.post("/createAcc", (req, res) => {
-    createUser(req, res) ;
+    const { user } = req.session ;
+
+    if(!user) {
+        createUser(req, res) ;
+    } else {
+        res.status(401).redirect("/menu") ;
+    }
+}) ;
+
+app.post("/addAcc", (req, res) => {
+    const { user } = req.session ;
+
+    if(user) {
+        addAccount(req, res) ;
+    } else {
+        res.redirect("/auth/signin") ;
+    }
 }) ;
 
 app.post("/logout", (req, res) => {
@@ -103,45 +139,26 @@ app.post("/logout", (req, res) => {
     res.redirect("/") ;
 }) ;
 
+app.delete("/deleteAcc", (req, res) => {
+    const { user } = req.session ;
+
+    if(user) {
+        deleteAccount(req, res) ;
+    } else {
+        res.redirect("/auth/signin") ;
+    }
+})
+
+app.patch("/editAcc", (req, res) => {
+    const { user } = req.session ;
+
+    if(user) {
+        editAccount(req, res) ;
+    } else {
+        res.redirect("/auth/signin") ;
+    }
+}) ;
+
 app.listen(PORT, () => {
     console.log(`Listening on port: ${PORT}`) ;
 }) ;
-
-
-
-
-
-
-
-
-
-
-
-// app.get("/signup", authorization.validarSesionUsuarioNoLoggeado, (req, res) => {
-//     res.sendFile(dirName + "/public/pages/register.html") ;
-//     console.log("Registrar Mandado") ;
-// }) ;
-
-// app.post("/signup", (req, res) => {
-//     if(req.body.nombre != '' || req.body.apellidop != '' || req.body.apellidom != '' || req.body.correo != '' || req.body.password != '') {
-//         autenticacion.registrar(req, res) ; 
-//     } else {
-//         res.status(400).send("Llena los campos vacios") ;
-//     }
-// }) ;
-
-// app.get("/forgotten", (req, res) => {
-//     res.sendFile(dirName + "/public/pages/changepassword.html") ;
-//     console.log("Olvidar Contrasenia mandado") ;
-// })
-
-// app.post("/forgotten", (req, res) => {
-//     console.log(req.body) ;
-
-//     autenticacion.cambiarContrasenia(req, res) ;
-
-// }) ;
-
-
-
-// console.log(dirName) ;

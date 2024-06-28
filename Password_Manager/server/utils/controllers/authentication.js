@@ -1,5 +1,6 @@
 import UsersDAO from "../../persistence/UsersDAO.js";
 import UserDTO from "../../dtos/UserDTO.js";
+import AccountDTO from "../../dtos/AccountDTO.js" ;
 import jwt from "jsonwebtoken" ;
 import dotenv from "dotenv" ;
 import cookieParser from "cookie-parser";
@@ -68,6 +69,7 @@ function getUser(req, res) {
     usersDAO.getAccountUser(user.email, name).then(results => {
         res.status(200).send(results) ;
     }).catch(err => {
+        console.log(err) ;
         res.status(400).send(err) ;
     }) ;
 }
@@ -82,4 +84,36 @@ function getPassword(req, res) {
         res.status(400).send(err) ;
     }) ;
 }
-export { login, createUser, getAccountsNames, getUser, getPassword } ;
+
+function addAccount(req, res) {
+    const { user } = req.session ;
+    
+    usersDAO.addAccount(user.email, new AccountDTO(req.body.name, req.body.user, req.body.password)).then(results => {
+        res.redirect("/menu") ;
+    }).catch(err => {
+        res.status(400).send(err) ;
+    }) ;
+}
+
+function deleteAccount(req, res) {
+    const { user } = req.session ;
+    
+    usersDAO.deleteAccount(user.email, req.body.name).then(results => {
+        res.status(200).send(results) ;
+    }).catch(err => {
+        res.status(400).send(err) ;
+    }) ;
+}
+
+function editAccount(req, res) {
+    const { user } = req.session ;
+
+    usersDAO.editAccount(user.email, req.body.oldName, new AccountDTO(req.body.name, req.body.user, req.body.password)).then(results => {
+        res.status(200).send(results) ;
+    }).catch(err => {
+        console.log(err) ;
+        res.status(400).send(err) ; 
+    }) ;
+}
+
+export { login, createUser, getAccountsNames, getUser, getPassword, addAccount, deleteAccount, editAccount } ;

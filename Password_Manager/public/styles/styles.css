@@ -18,6 +18,6 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 #slidingElement.visible {
-  max-height: 1000px; /* Ajustar al tamaño real del contenido */
+  max-height: 1000px; 
   opacity: 1;
 }

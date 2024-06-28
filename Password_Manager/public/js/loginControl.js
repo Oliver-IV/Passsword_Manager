@@ -24,7 +24,7 @@ function login() {
             });
         }
     }).catch(err => {
-        Swal.fire("Error", 'Se produjo un error al iniciar sesión. Por favor, inténtalo de nuevo.', "error") ;
+        Swal.fire("Error", "There's an error logging in, try again later...", "error") ;
     });
 }
 
@@ -32,6 +32,12 @@ const init = () => {
 
     btnLogin.onclick = () => {
         login() ;
+    }
+
+    document.onkeydown = (event) => {
+        if(event.key == 'Enter') {
+            login();
+        }
     }
 
 } ;

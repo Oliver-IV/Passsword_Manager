@@ -26,7 +26,7 @@ function createAccount() {
     ).then(response => {
         if(response.ok) {
             if (response.ok) {
-                Swal.fire("Cuenta creada", "Se ha creado la cuenta!", "success").then(() => {
+                Swal.fire("Account Created", "Your account has been created successfully!", "success").then(() => {
                     window.location.href = '/';
                 }) ;
             }
@@ -36,7 +36,7 @@ function createAccount() {
             });
         }
     }).catch(err => {
-        Swal.fire("Error", 'Se produjo un error al iniciar sesión. Por favor, inténtalo de nuevo.', "error") ;
+        Swal.fire("Error", "There's an error creating your account, try again later...", "error") ;
     });
 
 }

@@ -1,7 +1,7 @@
 import CryptoJS from "crypto-js";
 import client from "./connection.js";
 import dotenv from "dotenv";
-import { connect } from "http2";
+import DataError from "./DataError.js";
 
 
 class UsersDAO {
@@ -20,14 +20,18 @@ class UsersDAO {
             const existingUser = await collection.findOne({ "email": userDTO.email });
     
             if (existingUser) {
-                throw new Error("There's already a User with this email!");
+                throw new DataError("There's already a User with this email!");
             } else {
                 userDTO.password = encrypytAES(userDTO.password) ;
                 await collection.insertOne(userDTO);
                 return userDTO;
             }
         } catch (error) {
-            throw new Error("There's a problem with the connection...");
+            if(error instanceof DataError) {
+                throw new Error(error.message) ;
+            } else {
+                throw new Error("There's a problem with the connection...");
+            }
         } finally {
             await client.close() ;
         }
@@ -49,10 +53,14 @@ class UsersDAO {
                 );
                 return true;
             } else {
-                return new Error("There's an error with your data...");
+                throw new DataError("There's an error with your data...");
             }
         } catch (error) {
-            throw new Error("There's a problem with the connection...") ;
+            if(error instanceof DataError) {
+                throw new Error(error.message) ;
+            } else {
+                throw new Error("There's a problem with the connection...") ;
+            }
         } finally {
             await client.close() ;
         }
@@ -73,11 +81,14 @@ class UsersDAO {
             if(existingUser && decryptAES(existingUser.password) == password) {
                 return existingUser ;
             } else {
-                throw new Error("Your email or password is wrong...") ;
+                throw new DataError("Your email or password is wrong...") ;
             }
-
         } catch (error) {
-            throw new Error("There's a problem with the connection...") ;
+            if(error instanceof DataError) {
+                throw new Error(error.message) ;
+            } else {
+                throw new Error("There's a problem with the connection...") ;
+            }
         } finally {
             await client.close() ;
         }
@@ -104,11 +115,15 @@ class UsersDAO {
 
                 return names ;
             } else {
-                throw new Error("There's an error with your data...") ;
+                throw new DataError("There's an error with your data...") ;
             }
 
         } catch (error) {
-            throw new Error("There's a problem with the connection...") ;
+            if(error instanceof DataError) {
+                throw new Error(error.message) ;
+            } else {
+                throw new Error("There's a problem with the connection...") ;
+            }
         } finally {
             await client.close() ;
         }
@@ -135,11 +150,15 @@ class UsersDAO {
                 });
                 return user ;
             } else {
-                throw new Error("There's an error with your data...") ;
+                throw new DataError("There's an error with your data...") ;
             }
 
         } catch (error) {
-            throw new Error("There's a problem with the connection...") ;
+            if(error instanceof DataError) {
+                throw new Error(error.message) ;
+            } else {
+                throw new Error("There's a problem with the connection...") ;
+            }
         } finally {
             await client.close() ;
         }
@@ -166,11 +185,15 @@ class UsersDAO {
                 });
                 return decryptAES(password) ;
             } else {
-                throw new Error("There's an error with your data...") ;
+                throw new DataError("There's an error with your data...") ;
             }
 
         } catch (error) {
-            throw new Error("There's a problem with the connection...") ;
+            if(error instanceof DataError) {
+                throw new Error(error.message) ;
+            } else {
+                throw new Error("There's a problem with the connection...") ;
+            }
         } finally {
             await client.close() ;
         }
@@ -205,17 +228,21 @@ class UsersDAO {
 
                 return true ;
             } else {
-                throw new Error("There's an error with your data...") ;
+                throw new DataError("There's an error with your data...") ;
             }
 
         } catch (error) {
-            throw new Error("There's a problem with the connection...") ;
+            if(error instanceof DataError) {
+                throw new Error(error.message) ;
+            } else {
+                throw new Error("There's a problem with the connection...") ;
+            }
         } finally {
             await client.close() ;
         }
     }
     
-    async editAccount(email, newAccount) {
+    async editAccount(email, oldName, newAccount) {
         try {
             await client.connect() ;
 
@@ -229,14 +256,14 @@ class UsersDAO {
 
             if(existingUser) {
                 
-                const accountIndex = existingUser.accounts.findIndex(account => account.name.toLowerCase() == newAccount.name.toLowerCase()) ;
+                const accountIndex = existingUser.accounts.findIndex(account => account.name.toLowerCase() == oldName.toLowerCase()) ;
 
                 if(accountIndex != -1) {
 
                     existingUser.accounts[accountIndex] = {
                         "name": newAccount.name,
                         "user": newAccount.user,
-                        "password": newAccount.password
+                        "password": encrypytAES(newAccount.password)
                     }
 
                     await collection.updateOne(
@@ -250,14 +277,18 @@ class UsersDAO {
                     
                     return true ;
                 } else {
-                    throw new Error("There's a problem editing your account...")
+                    throw new DataError("There's a problem editing your account...")
                 }
             } else {
-                throw new Error("There's an error with your data...") ;
+                throw new DataError("There's an error with your data...") ;
             }
 
         } catch (error) {
-            throw new Error("There's a problem with the connection...") ;
+            if(error instanceof DataError) {
+                throw new Error(error.message) ;
+            } else {
+                throw new Error("There's a problem with the connection...") ;
+            }
         } finally {
             await client.close() ;
         }
@@ -288,15 +319,18 @@ class UsersDAO {
                     
                     return true ;
                 } else {
-                    throw new Error("There's a problem editing your account...")
+                    throw new DataError("There's a problem editing your account...")
                 }
             } else {
-                throw new Error("There's an error with your data...") ;
+                throw new DataError("There's an error with your data...") ;
             }
 
         } catch (error) {
-            console.log(error) ;
-            throw new Error("There's a problem with the connection...") ;
+            if(error instanceof DataError) {
+                throw new Error(error.message) ;
+            } else {
+                throw new Error("There's a problem with the connection...") ;
+            }
         } finally {
             await client.close() ;
         }
