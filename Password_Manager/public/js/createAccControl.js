@@ -31,12 +31,12 @@ function createAccount() {
                 }) ;
             }
         } else {
-            return response.text().then(errorMessage => {
-                Swal.fire("Error", errorMessage, "error") ;
+            return response.json().then(errorMessage => {
+                throw new Error(errorMessage.error);
             });
         }
     }).catch(err => {
-        Swal.fire("Error", "There's an error creating your account, try again later...", "error") ;
+        Swal.fire("Error", err.message, "error") ;
     });
 
 }

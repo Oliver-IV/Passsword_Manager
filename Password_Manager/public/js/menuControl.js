@@ -38,8 +38,8 @@ function showUser(i) {
             } else if (response.status === 401) {
                 window.location.href = "/auth/signin";
             } else {
-                return response.text().then(errorMessage => {
-                    throw new Error(errorMessage);
+                return response.json().then(errorMessage => {
+                    throw new Error(errorMessage.error);
                 });
             }
         }
@@ -71,8 +71,8 @@ function showPassword(i) {
             } else if (response.status === 401) {
                 window.location.href = "/auth/signin";
             } else {
-                return response.text().then(errorMessage => {
-                    throw new Error(errorMessage);
+                return response.json().then(errorMessage => {
+                    throw new Error(errorMessage.error);
                 });
             }
         }
@@ -106,8 +106,8 @@ function addAccount() {
                 window.location.reload() ;
             }) ;
         } else {
-            return response.text().then(errorMessage => {
-                throw new Error(errorMessage) ;
+            return response.json().then(errorMessage => {
+                throw new Error(errorMessage.error);
             });
         }
     }).catch(err => {
@@ -146,8 +146,8 @@ function deleteAccount(i) {
                         window.location.reload() ;
                       }) ;
                 } else {
-                    return response.text().then(errorMessage => {
-                        throw new Error(errorMessage) ;
+                    return response.json().then(errorMessage => {
+                        throw new Error(errorMessage.error);
                     });
                 }
             }).catch(err => {
@@ -195,8 +195,8 @@ function copyUser(i) {
         } else if (response.status === 401) {
             window.location.href = "/auth/signin";
         } else {
-            return response.text().then(errorMessage => {
-                throw new Error(errorMessage);
+            return response.json().then(errorMessage => {
+                throw new Error(errorMessage.error);
             });
         }
     }).catch(err => {
@@ -242,8 +242,8 @@ function copyPassword(i) {
             } else if (response.status === 401) {
                 window.location.href = "/auth/signin";
             } else {
-                return response.text().then(errorMessage => {
-                    throw new Error(errorMessage);
+                return response.json().then(errorMessage => {
+                    throw new Error(errorMessage.error);
                 });
             }
         }).catch(err => {
@@ -266,9 +266,9 @@ function setUsernameInEdit(accountName) {
           } else if (response.status === 401) {
               window.location.href = "/auth/signin";
           } else {
-              return response.text().then(errorMessage => {
-                  throw new Error(errorMessage);
-              });
+            return response.json().then(errorMessage => {
+                throw new Error(errorMessage.error);
+            });
           }
       }).catch(err => {
         Swal.fire("Error", err.message, "error");
@@ -289,9 +289,9 @@ function setPasswordInEdit(accountName) {
           } else if (response.status === 401) {
               window.location.href = "/auth/signin";
           } else {
-              return response.text().then(errorMessage => {
-                  throw new Error(errorMessage);
-              });
+            return response.json().then(errorMessage => {
+                throw new Error(errorMessage.error);
+            });
           }
       }).catch(err => {
         Swal.fire("Error", err.message, "error");
@@ -321,8 +321,8 @@ function editAccount() {
                 window.location.reload() ;
             }) ;
         } else {
-            return response.text().then(errorMessage => {
-                throw new Error(errorMessage) ;
+            return response.json().then(errorMessage => {
+                throw new Error(errorMessage.error);
             });
         }
     }).catch(err => {

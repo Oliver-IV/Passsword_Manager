@@ -1,24 +1,24 @@
 const inputEmail = document.getElementById("email") ;
-const inputPassword = document.getElementById("password") ;
-const btnLogin = document.getElementById("login") ;
+const btnSendCode = document.getElementById("sendcode") ;
 
-function login() {
+function sendRecoveryCode() {
     const body = {
-        email: inputEmail.value,
-        password: inputPassword.value
+        email: inputEmail.value
     }
-    fetch("/login",
+    fetch(`/forgotten/code`,
         {
             method: 'POST',
             headers: {
-            'Content-Type': 'application/json'
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify(body) 
         }
     ).then(response => {
         if(response.ok) {
-            window.location.href = "/menu"
-        } else {
+            Swal.fire("Code Sent!", "Check your email and enter the code to change your password", "success").then(() => {
+                window.location.href = "/forgotten/code" ;
+            }) ;
+        }else {
             return response.json().then(errorMessage => {
                 throw new Error(errorMessage.error);
             });
@@ -30,15 +30,11 @@ function login() {
 
 const init = () => {
 
-    btnLogin.onclick = () => {
-        login() ;
-    }
+    btnSendCode.onclick = () => {
 
-    document.onkeydown = (event) => {
-        if(event.key == 'Enter') {
-            login();
-        }
-    }
+        sendRecoveryCode() ;
+
+    };
 
 } ;
 
