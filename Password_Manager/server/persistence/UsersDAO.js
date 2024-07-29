@@ -46,12 +46,17 @@ class UsersDAO {
             const userBD = await collection.findOne({ "email": email });
 
             if (userBD) {
-                account.password = encrypytAES(account.password) ;
+                const newAccountIndex = userBD.accounts.findIndex(acc => acc.name.toLowerCase() == account.name.toLowerCase()) ;
+                if(newAccountIndex == -1) {
+                    account.password = encrypytAES(account.password) ;
                 await collection.updateOne(
                     { "email": email },
                     { $push: { "accounts": account } }
                 );
-                return true;
+                    return true;
+                } else {
+                    throw new DataError("There's already an account with this name...") ;
+                }
             } else {
                 throw new DataError("There's an error with your data...");
             }
@@ -199,8 +204,32 @@ class UsersDAO {
         }
     }
 
-    existUser() {
+    async existUser(email) {
+        try {
+            await client.connect() ;
+            
+            const collection = client.db("bd_password_manager").collection("users") ;
 
+            const existingUser = await collection.findOne(
+                {
+                "email": email
+                }
+            ) ;
+
+            if(existingUser) {
+                return true ;
+            } else {
+                false ;
+            }
+        } catch (error) {
+            if(error instanceof DataError) {
+                throw new Error(error.message) ;
+            } else {
+                throw new Error("There's a problem with the connection...") ;
+            }
+        } finally {
+            await client.close() ;
+        }
     }
 
     async changePassword(email, password) {
@@ -257,27 +286,32 @@ class UsersDAO {
             if(existingUser) {
                 
                 const accountIndex = existingUser.accounts.findIndex(account => account.name.toLowerCase() == oldName.toLowerCase()) ;
+                const newAccountIndex = existingUser.accounts.findIndex(account => account.name.toLowerCase() == newAccount.name.toLowerCase()) ;
 
-                if(accountIndex != -1) {
+                if(newAccountIndex == -1) {
+                    if(accountIndex != -1) {
 
-                    existingUser.accounts[accountIndex] = {
-                        "name": newAccount.name,
-                        "user": newAccount.user,
-                        "password": encrypytAES(newAccount.password)
-                    }
-
-                    await collection.updateOne(
-                        {
-                            "email": email
-                        },
-                        {
-                            $set: {"accounts": existingUser.accounts}
+                        existingUser.accounts[accountIndex] = {
+                            "name": newAccount.name,
+                            "user": newAccount.user,
+                            "password": encrypytAES(newAccount.password)
                         }
-                    ) ;
-                    
-                    return true ;
+    
+                        await collection.updateOne(
+                            {
+                                "email": email
+                            },
+                            {
+                                $set: {"accounts": existingUser.accounts}
+                            }
+                        ) ;
+                        
+                        return true ;
+                    } else {
+                        throw new DataError("There's a problem editing your account...") ;
+                    }
                 } else {
-                    throw new DataError("There's a problem editing your account...")
+                    throw new DataError("There's already an account with this name...") ;
                 }
             } else {
                 throw new DataError("There's an error with your data...") ;

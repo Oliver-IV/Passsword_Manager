@@ -4,6 +4,9 @@ import AccountDTO from "../../dtos/AccountDTO.js" ;
 import jwt from "jsonwebtoken" ;
 import dotenv from "dotenv" ;
 import cookieParser from "cookie-parser";
+import { validateUser, validateAccount, validateLogin } from "../../persistence/dataSchemas.js"
+import transport from "./mailer.js";
+import CryptoJS from "crypto-js";
 
 dotenv.config({path: "../.env"}) ;
 
@@ -11,109 +14,227 @@ const usersDAO = new UsersDAO() ;
 
 function login(req, res) {
 
-    usersDAO.getUser(req.body.email, req.body.password).then(results => {
-
-        if(results) {
-
-            const user = {
-                email: results.email,
-                name: results.name,
-                accounts: results.accounts
-            }
-            const token = jwt.sign(
-                user,
-                process.env.SECRET_KEY,
-                {
-                    expiresIn: "1h"
+    try {
+        if(validateLogin({email: req.body.email, password: req.body.password})) {
+            usersDAO.getUser(req.body.email, req.body.password).then(results => {
+    
+                if(results) {
+        
+                    const user = {
+                        email: results.email,
+                        name: results.name,
+                        accounts: results.accounts
+                    }
+                    const token = jwt.sign(
+                        user,
+                        process.env.SECRET_KEY,
+                        {
+                            expiresIn: "1h"
+                        }
+                    ) ;
+        
+                    res.status(200).cookie("access_token", token, 
+                        {
+                            httpOnly: true,
+                            secure: true,
+                            sameSite: "strict",
+                            maxAge: 100 * 60 * 60
+                        }
+                    ).send(user) ;
                 }
-            ) ;
-
-            res.status(200).cookie("access_token", token, 
-                {
-                    httpOnly: true,
-                    secure: true,
-                    sameSite: "strict",
-                    maxAge: 100 * 60 * 60
-                }
-            ).send(user) ;
+        
+            }).catch(err => {
+                res.status(401).json({error: err.message || "Unknown Error"}) ;
+            }) ;
         }
-
-    }).catch(err => {
-        res.status(401).send(err.message) ;
-    }) ;
-
+    } catch (error) {
+        res.status(401).json({error: error.message || "Unknown Error"})
+    }
 }
 
 function createUser(req, res) {
-    const b = req.body ;
-    const user = new UserDTO(b.name, b.last_name_p, b.last_name_m, b.email, b.password, []) ;
-
-    usersDAO.addUser(user).then(results => {
-        
-        if(results) {
-            res.status(200).send("The user has ben creates succesfully!") ;
+    try {
+        const b = req.body ;
+        const user = new UserDTO(b.name, b.last_name_p, b.last_name_m, b.email, b.password, []) ;
+        if(validateUser(user)) {
+            usersDAO.addUser(user).then(results => {
+            
+                if(results) {
+                    res.status(200).send("The user has been created succesfully!") ;
+                }
+            }).catch(err => {
+                res.status(400).json({error: err.message || "Unknown Error"}) ;
+            }) ;
         }
-    }).catch(err => {
-        res.status(400).send(err.message) ;
-    }) ;
+    } catch (err) {
+        res.status(400).json({error: error.message || "Unknown Error"}) ;
+    }
+    
 } 
 
 function getAccountsNames(email) {
-    return usersDAO.getAccountsNames(email) ;
+    try {
+        return usersDAO.getAccountsNames(email) ;
+    } catch (error) {
+        res.status(400).json({error: "Unknown Error"}) ;
+    }
 }
 
 function getUser(req, res) {
-    const { user } = req.session ;
-    const name = req.query.name ;
+    try {
+        const { user } = req.session;
+        const name = req.query.name;
+
+        usersDAO.getAccountUser(user.email, name).then(results => {
+            res.status(200).send(results);
+        }).catch(err => {
+            console.log(err);
+            res.status(400).json({ error: err.message || "Unknown Error" });
+        });
+    } catch (error) {
+        res.status(400).json({error: "Unknown Error"}) ;
+    }
     
-    usersDAO.getAccountUser(user.email, name).then(results => {
-        res.status(200).send(results) ;
-    }).catch(err => {
-        console.log(err) ;
-        res.status(400).send(err) ;
-    }) ;
 }
 
 function getPassword(req, res) {
-    const { user } = req.session ;
-    const password = req.query.password ;
+    try {
+        const { user } = req.session;
+        const password = req.query.password;
+
+        usersDAO.getAccountPassword(user.email, password).then(results => {
+            res.status(200).send(results);
+        }).catch(err => {
+            res.status(400).json({ error: err.message || "Unknown Error" });
+        });
+    } catch (error) {
+        res.status(400).json({error: "Unknown Error"}) ;
+    }
     
-    usersDAO.getAccountPassword(user.email, password).then(results => {
-        res.status(200).send(results) ;
-    }).catch(err => {
-        res.status(400).send(err) ;
-    }) ;
 }
 
 function addAccount(req, res) {
-    const { user } = req.session ;
     
-    usersDAO.addAccount(user.email, new AccountDTO(req.body.name, req.body.user, req.body.password)).then(results => {
-        res.redirect("/menu") ;
-    }).catch(err => {
-        res.status(400).send(err) ;
-    }) ;
+    try {
+        const { user } = req.session ;
+    
+        const account = new AccountDTO(req.body.name, req.body.user, req.body.password) ;
+        if(validateAccount(account)) {
+            usersDAO.addAccount(user.email, account).then(results => {
+                res.redirect("/menu") ;
+            }).catch(err => {
+                res.status(400).json({error: err.message || "Unknown Error"}) ;
+            }) ;
+        }
+    } catch (error) {
+        res.status(400).json({error: error.message || "Unknown Error"}) ;
+    }
+    
 }
 
 function deleteAccount(req, res) {
-    const { user } = req.session ;
-    
-    usersDAO.deleteAccount(user.email, req.body.name).then(results => {
-        res.status(200).send(results) ;
-    }).catch(err => {
-        res.status(400).send(err) ;
-    }) ;
+    try {
+        const { user } = req.session;
+
+        usersDAO.deleteAccount(user.email, req.body.name).then(results => {
+            res.status(200).send(results);
+        }).catch(err => {
+            res.status(400).json({ error: err.message || "Unknown Error" });
+        });
+    } catch (error) {
+        res.status(400).json({error: "Unknown Error"}) ;
+    }
 }
 
 function editAccount(req, res) {
-    const { user } = req.session ;
+    
+    try {   const { user } = req.session ;
 
-    usersDAO.editAccount(user.email, req.body.oldName, new AccountDTO(req.body.name, req.body.user, req.body.password)).then(results => {
-        res.status(200).send(results) ;
-    }).catch(err => {
-        console.log(err) ;
-        res.status(400).send(err) ; 
-    }) ;
+        const account = new AccountDTO(req.body.name, req.body.user, req.body.password) ;
+        if(validateAccount(account)) {
+            usersDAO.editAccount(user.email, req.body.oldName, account).then(results => {
+                res.status(200).send(results) ;
+            }).catch(err => {
+                res.status(400).json({error: err.message || "Unknown Error"}) ;
+            }) ;
+        }
+    } catch(error) {
+        res.status(400).json({error: error.message || "Unknown Error"}) ;
+    }
+    
 }
 
-export { login, createUser, getAccountsNames, getUser, getPassword, addAccount, deleteAccount, editAccount } ;
+function existUser(req, res) {
+    const email = req.body.email ;
+    try {
+        return usersDAO.existUser(email) ;
+    } catch (error) {
+        res.status(400).json({error: error.message || "Unknown Error"}) ;
+    }
+}
+
+async function generateCodeForPassword(req, res) {
+    const email = req.body.email;
+
+    const recoveryCode = generateRecoveryCode() ;
+    const expirationTime = Date.now() + 3600000;
+
+    req.session.recoverycode = recoveryCode ;
+    req.session.codeexpirationtime = expirationTime ;
+
+    const mailOptions = {
+        from: process.env.MAIL_USER,
+        to: email,
+        subject: 'PASSWORD MANAGER RECOVERY CODE',
+        text: `Hi! This is CompaOli from your Password Manager. You've requested a password change and this is your code: ${recoveryCode}
+                , it will expire on 1 hour. If it wasn't you, don't worry! Your passwords are still save, just ignore this mail and thanks 
+                for trusting us :)`
+    }
+
+    await transport.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            return console.log(error);
+        }
+        console.log('Email sent: ' + info.response);
+        req.session.save() ;
+        res.status(200).send("Your recovery code has been sent to you email successfully!") ;
+    });
+    
+}
+
+function changePassword(req, res) {
+    const userRecoveryCode = req.body.recoverycode ;
+    const recoveryCode = req.session.recoverycode ;
+    const expirationTime = req.session.codeexpirationtime ;
+
+    if(expirationTime.getTime() > Date.now()) {
+        if(userRecoveryCode === recoveryCode) {
+            try {
+                if(validateLogin({email: req.body.email, password:req.body.newPassword})) {
+                    usersDAO.changePassword(req.body.email, req.body.newPassword) ;
+                }
+            } catch (error) {
+                res.status(401).json({error: err.message || "Unknown Error"}) ;
+            }
+        } else {
+            res.status(401).json({error: "The code is worng, check it and try again later..."}) ;
+        }
+    }
+    
+}
+
+export { login, createUser, getAccountsNames, getUser, getPassword, addAccount, deleteAccount, editAccount, existUser, changePassword, generateCodeForPassword } ;
+
+function generateRecoveryCode() {
+    const length = 6 ;
+    const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    const randomBytes = CryptoJS.lib.WordArray.random(length);
+  
+    for (let i = 0; i < randomBytes.sigBytes; i++) {
+      const byte = (randomBytes.words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
+      code += charset[byte % charset.length];
+    }
+  
+    return code;
+}

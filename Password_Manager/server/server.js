@@ -6,7 +6,7 @@ import cookieParser from "cookie-parser";
 import { PORT } from "./utils/config.js"
 import jwt from "jsonwebtoken" ;
 import dotenv from "dotenv" ;
-import { login, createUser, getAccountsNames, getPassword, getUser, addAccount, deleteAccount, editAccount } from "./utils/controllers/authentication.js"
+import { login, createUser, getAccountsNames, getPassword, getUser, addAccount, deleteAccount, editAccount, existUser, changePassword, generateCodeForPassword } from "./utils/controllers/authentication.js"
 import { addAbortSignal } from "stream";
 
 dotenv.config() ;
@@ -20,6 +20,7 @@ app.use(express.static(publicPath)) ;
 app.use(express.json()) ;
 app.use(cookieParser()) ;
 app.use((req, res, next) => {
+    res.header('Cache-Control', 'no-cache, private, no-store, must-revalidate, max-stale=0, post-check=0, pre-check=0');
     const token = req.cookies.access_token ;
     req.session = {user: null} ;
     try {
@@ -32,10 +33,9 @@ app.use((req, res, next) => {
     next() ;
 }) ;
 
-console.log(publicPath) ;
-
 app.get("/", (req, res) => {
     const { user } = req.session ;
+    resetSession() ;
 
     if(!user) {
         res.sendFile(publicPath + "/pages/login.html") ;
@@ -45,15 +45,38 @@ app.get("/", (req, res) => {
 }) ;
 
 app.get("/createAcc", (req, res) => {
-    res.sendFile(publicPath + "/pages/createAcc.html") ;
+    const { user } = req.session ;
+
+    if(!user) {
+        res.sendFile(publicPath + "/pages/createAcc.html") ;
+    } else {
+        res.redirect("/auth/logout") ;
+    }
 }) ;
 
 app.get("/forgotten", (req, res) => {
-    res.sendFile(publicPath + "/pages/forgotten.html") ;
+    const { user } = req.session ;
+
+    if(!user) {
+        res.sendFile(publicPath + "/pages/forgotten.html") ;
+    } else {
+        res.redirect("/auth/logout") ;
+    }
 }) ;
 
 app.get("/forgotten/code", (req, res) => {
-    res.sendFile(publicPath + "/pages/forgottencode.html") ;
+    const { user } = req.session ;
+    const { email } = req.session ;
+
+    if(!user) {
+        if(email) {
+            res.sendFile(publicPath + "/pages/forgottencode.html") ;
+        } else {
+            res.redirect("/") ;
+        }
+    } else {
+        res.redirect("/auth/logout") ;
+    }
 }) ;
 
 app.get("/menu", (req, res) => {
@@ -139,6 +162,20 @@ app.post("/logout", (req, res) => {
     res.redirect("/") ;
 }) ;
 
+app.post("/forgotten/code", (req, res) => {
+    const { user } = req.session ;
+
+    if(!user) {
+        if(existUser(req, res)){
+            generateCodeForPassword(req, res) ;
+        } else {
+            res.redirect("/") ;
+        }
+    } else {
+        res.redirect("/auth/logout") ;
+    }
+}) ;
+
 app.delete("/deleteAcc", (req, res) => {
     const { user } = req.session ;
 
@@ -159,6 +196,31 @@ app.patch("/editAcc", (req, res) => {
     }
 }) ;
 
+app.patch("/forgotten/changepassword", (req, res) => {
+    const { user } = req.session ;
+    const { email } = req.session ;
+
+    if(!user) {
+        if(email) {
+            changePassword(req, res) ;
+        } else {
+            res.redirect("/") ;
+        }
+    } else {
+        res.redirect("/auth/logout") ;
+    }
+}) ;
+
 app.listen(PORT, () => {
     console.log(`Listening on port: ${PORT}`) ;
 }) ;
+
+function resetSession(req, res) {
+    try {
+        req.session.email = null ;
+        req.session.recoverycode = null ;
+        req.session.codeexpirationtime = null ;
+    } catch (error) {
+        
+    }
+}

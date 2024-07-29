@@ -2,6 +2,7 @@ import UserDTO from "./dtos/UserDTO.js";
 import UsersDAO from "./persistence/UsersDAO.js";
 import client from "./persistence/connection.js"
 import AccountDTO from "./dtos/AccountDTO.js"
+import { validateUser } from "./persistence/dataSchemas.js";
 
 const usersDAO = new UsersDAO() ; 
 
@@ -13,13 +14,13 @@ const usersDAO = new UsersDAO() ;
 //     console.log(err) ; 
 // });
 
-   usersDAO.addAccount("mochila@gmail.com", new AccountDTO("Playstation", "mochila@gmail.com", "diosnoexiste"))
-   .then((result) => {
-       console.log(result) ;
-   })
-   .catch(err => {
-       console.log(err) ; 
-   });
+//    usersDAO.addAccount("mochila@gmail.com", new AccountDTO("Playstation", "mochila@gmail.com", "diosnoexiste"))
+//    .then((result) => {
+//        console.log(result) ;
+//    })
+//    .catch(err => {
+//        console.log(err) ; 
+//    });
 
 // usersDAO.getUser("companacho@gmail.com", "companacho777").then((results) => {
 //     console.log(results) ;
@@ -62,3 +63,5 @@ const usersDAO = new UsersDAO() ;
 // }).catch(err => {
 //     console.log(err) ;
 // }) ;
+
+validateUser(new UserDTO("", "", "", "", "", [])) ;
