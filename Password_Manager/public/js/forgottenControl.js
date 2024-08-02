@@ -5,6 +5,7 @@ function sendRecoveryCode() {
     const body = {
         email: inputEmail.value
     }
+
     fetch(`/forgotten/code`,
         {
             method: 'POST',

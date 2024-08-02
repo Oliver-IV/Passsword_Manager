@@ -1,25 +1,25 @@
 import UsersDAO from "../../persistence/UsersDAO.js";
 import UserDTO from "../../dtos/UserDTO.js";
-import AccountDTO from "../../dtos/AccountDTO.js" ;
-import jwt from "jsonwebtoken" ;
-import dotenv from "dotenv" ;
+import AccountDTO from "../../dtos/AccountDTO.js";
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import { validateUser, validateAccount, validateLogin } from "../../persistence/dataSchemas.js"
 import transport from "./mailer.js";
 import CryptoJS from "crypto-js";
 
-dotenv.config({path: "../.env"}) ;
+dotenv.config({ path: "../.env" });
 
-const usersDAO = new UsersDAO() ;
+const usersDAO = new UsersDAO();
 
 function login(req, res) {
 
     try {
-        if(validateLogin({email: req.body.email, password: req.body.password})) {
+        if (validateLogin({ email: req.body.email, password: req.body.password })) {
             usersDAO.getUser(req.body.email, req.body.password).then(results => {
-    
-                if(results) {
-        
+
+                if (results) {
+
                     const user = {
                         email: results.email,
                         name: results.name,
@@ -31,52 +31,57 @@ function login(req, res) {
                         {
                             expiresIn: "1h"
                         }
-                    ) ;
-        
-                    res.status(200).cookie("access_token", token, 
+                    );
+
+                    res.status(200).cookie("access_token", token,
                         {
                             httpOnly: true,
                             secure: true,
                             sameSite: "strict",
-                            maxAge: 100 * 60 * 60
+                            maxAge: 3600000
                         }
-                    ).send(user) ;
+                    ).send(user);
                 }
-        
+
             }).catch(err => {
-                res.status(401).json({error: err.message || "Unknown Error"}) ;
-            }) ;
+                res.status(401).json({ error: err.message || "Unknown Error" });
+            });
         }
     } catch (error) {
-        res.status(401).json({error: error.message || "Unknown Error"})
+        res.status(401).json({ error: error.message || "Unknown Error" })
     }
 }
 
 function createUser(req, res) {
     try {
-        const b = req.body ;
-        const user = new UserDTO(b.name, b.last_name_p, b.last_name_m, b.email, b.password, []) ;
-        if(validateUser(user)) {
-            usersDAO.addUser(user).then(results => {
-            
-                if(results) {
-                    res.status(200).send("The user has been created succesfully!") ;
-                }
-            }).catch(err => {
-                res.status(400).json({error: err.message || "Unknown Error"}) ;
-            }) ;
+        const b = req.body;
+
+        const user = new UserDTO(b.name, b.last_name_p, b.last_name_m, b.email, b.password, []);
+        if (validateUser(user)) {
+            if (b.password === b.repeatedPassword) {
+                usersDAO.addUser(user).then(results => {
+
+                    if (results) {
+                        res.status(200).send("The user has been created succesfully!");
+                    }
+                }).catch(err => {
+                    res.status(400).json({ error: err.message || "Unknown Error" });
+                });
+            } else {
+                res.status(400).json({ error: "The passwords don't match" });
+            }
         }
-    } catch (err) {
-        res.status(400).json({error: error.message || "Unknown Error"}) ;
+    } catch (error) {
+        res.status(400).json({ error: error.message || "Unknown Error" });
     }
-    
-} 
+
+}
 
 function getAccountsNames(email) {
     try {
-        return usersDAO.getAccountsNames(email) ;
+        return usersDAO.getAccountsNames(email);
     } catch (error) {
-        res.status(400).json({error: "Unknown Error"}) ;
+        res.status(400).json({ error: "Unknown Error" });
     }
 }
 
@@ -92,9 +97,9 @@ function getUser(req, res) {
             res.status(400).json({ error: err.message || "Unknown Error" });
         });
     } catch (error) {
-        res.status(400).json({error: "Unknown Error"}) ;
+        res.status(400).json({ error: "Unknown Error" });
     }
-    
+
 }
 
 function getPassword(req, res) {
@@ -108,28 +113,28 @@ function getPassword(req, res) {
             res.status(400).json({ error: err.message || "Unknown Error" });
         });
     } catch (error) {
-        res.status(400).json({error: "Unknown Error"}) ;
+        res.status(400).json({ error: "Unknown Error" });
     }
-    
+
 }
 
 function addAccount(req, res) {
-    
+
     try {
-        const { user } = req.session ;
-    
-        const account = new AccountDTO(req.body.name, req.body.user, req.body.password) ;
-        if(validateAccount(account)) {
+        const { user } = req.session;
+
+        const account = new AccountDTO(req.body.name, req.body.user, req.body.password);
+        if (validateAccount(account)) {
             usersDAO.addAccount(user.email, account).then(results => {
-                res.redirect("/menu") ;
+                res.redirect("/menu");
             }).catch(err => {
-                res.status(400).json({error: err.message || "Unknown Error"}) ;
-            }) ;
+                res.status(400).json({ error: err.message || "Unknown Error" });
+            });
         }
     } catch (error) {
-        res.status(400).json({error: error.message || "Unknown Error"}) ;
+        res.status(400).json({ error: error.message || "Unknown Error" });
     }
-    
+
 }
 
 function deleteAccount(req, res) {
@@ -142,45 +147,57 @@ function deleteAccount(req, res) {
             res.status(400).json({ error: err.message || "Unknown Error" });
         });
     } catch (error) {
-        res.status(400).json({error: "Unknown Error"}) ;
+        res.status(400).json({ error: "Unknown Error" });
     }
 }
 
 function editAccount(req, res) {
-    
-    try {   const { user } = req.session ;
 
-        const account = new AccountDTO(req.body.name, req.body.user, req.body.password) ;
-        if(validateAccount(account)) {
+    try {
+        const { user } = req.session;
+
+        const account = new AccountDTO(req.body.name, req.body.user, req.body.password);
+        if (validateAccount(account)) {
             usersDAO.editAccount(user.email, req.body.oldName, account).then(results => {
-                res.status(200).send(results) ;
+                res.status(200).send(results);
             }).catch(err => {
-                res.status(400).json({error: err.message || "Unknown Error"}) ;
-            }) ;
+                res.status(400).json({ error: err.message || "Unknown Error" });
+            });
         }
-    } catch(error) {
-        res.status(400).json({error: error.message || "Unknown Error"}) ;
+    } catch (error) {
+        res.status(400).json({ error: error.message || "Unknown Error" });
     }
-    
+
 }
 
 function existUser(req, res) {
-    const email = req.body.email ;
+    const email = req.body.email;
     try {
-        return usersDAO.existUser(email) ;
+        return usersDAO.existUser(email);
     } catch (error) {
-        res.status(400).json({error: error.message || "Unknown Error"}) ;
+        res.status(400).json({ error: error.message || "Unknown Error" });
     }
 }
 
 async function generateCodeForPassword(req, res) {
     const email = req.body.email;
 
-    const recoveryCode = generateRecoveryCode() ;
+    const recoveryCode = generateRecoveryCode();
     const expirationTime = Date.now() + 3600000;
 
-    req.session.recoverycode = recoveryCode ;
-    req.session.codeexpirationtime = expirationTime ;
+    const data = {
+        recoverycode: recoveryCode,
+        codeexpirationtime: expirationTime,
+        email: email
+    }
+
+    const token = jwt.sign(
+        data,
+        process.env.CHANGEP_KEY,
+        {
+            expiresIn: "1h"
+        }
+    );
 
     const mailOptions = {
         from: process.env.MAIL_USER,
@@ -191,50 +208,55 @@ async function generateCodeForPassword(req, res) {
                 for trusting us :)`
     }
 
-    await transport.sendMail(mailOptions, (error, info) => {
-        if (error) {
-            return console.log(error);
+    const info = await transport.sendMail(mailOptions);
+
+    res.status(200).cookie("changep_token", token,
+        {
+            httpOnly: true,
+            secure: true,
+            sameSite: "strict",
+            maxAge: 100 * 60 * 60
         }
-        console.log('Email sent: ' + info.response);
-        req.session.save() ;
-        res.status(200).send("Your recovery code has been sent to you email successfully!") ;
-    });
-    
+    ).status(200).json({ message: "Your recovery code has been sent to your email successfully!" });
+
 }
 
 function changePassword(req, res) {
-    const userRecoveryCode = req.body.recoverycode ;
-    const recoveryCode = req.session.recoverycode ;
-    const expirationTime = req.session.codeexpirationtime ;
+    const userRecoveryCode = req.body.recoverycode;
+    const recoveryCode = req.session.dataPassword.recoverycode;
+    const expirationTime = req.session.dataPassword.codeexpirationtime;
+    const email = req.session.dataPassword.email;
 
-    if(expirationTime.getTime() > Date.now()) {
-        if(userRecoveryCode === recoveryCode) {
+    if (expirationTime > Date.now()) {
+        if (userRecoveryCode === recoveryCode) {
             try {
-                if(validateLogin({email: req.body.email, password:req.body.newPassword})) {
-                    usersDAO.changePassword(req.body.email, req.body.newPassword) ;
+                if (validateLogin({ email: email, password: req.body.newPassword })) {
+                    usersDAO.changePassword(email, req.body.newPassword).then(results => {
+                        res.status(200).send("The password has been changed successfully!");
+                    });
                 }
             } catch (error) {
-                res.status(401).json({error: err.message || "Unknown Error"}) ;
+                res.status(401).json({ error: error.message || "Unknown Error" });
             }
         } else {
-            res.status(401).json({error: "The code is worng, check it and try again later..."}) ;
+            res.status(401).json({ error: "The code is worng, check it and try again later..." });
         }
     }
-    
+
 }
 
-export { login, createUser, getAccountsNames, getUser, getPassword, addAccount, deleteAccount, editAccount, existUser, changePassword, generateCodeForPassword } ;
+export { login, createUser, getAccountsNames, getUser, getPassword, addAccount, deleteAccount, editAccount, existUser, changePassword, generateCodeForPassword };
 
 function generateRecoveryCode() {
-    const length = 6 ;
+    const length = 6;
     const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let code = '';
     const randomBytes = CryptoJS.lib.WordArray.random(length);
-  
+
     for (let i = 0; i < randomBytes.sigBytes; i++) {
-      const byte = (randomBytes.words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
-      code += charset[byte % charset.length];
+        const byte = (randomBytes.words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
+        code += charset[byte % charset.length];
     }
-  
+
     return code;
 }

@@ -7,14 +7,14 @@ import { PORT } from "./utils/config.js"
 import jwt from "jsonwebtoken" ;
 import dotenv from "dotenv" ;
 import { login, createUser, getAccountsNames, getPassword, getUser, addAccount, deleteAccount, editAccount, existUser, changePassword, generateCodeForPassword } from "./utils/controllers/authentication.js"
-import { addAbortSignal } from "stream";
+import { addAbortSignal } from "stream" ;
 
 dotenv.config() ;
 const __dirName = path.dirname(fileURLToPath(import.meta.url)) ;
 const publicPath = path.join(__dirName, "../public") ;
 const app = express() ;
 
-app.set("view engine", "ejs")
+app.set("view engine", "ejs") ;
 app.use(bodyParser.urlencoded({extended: true})) ;
 app.use(express.static(publicPath)) ;
 app.use(express.json()) ;
@@ -22,7 +22,8 @@ app.use(cookieParser()) ;
 app.use((req, res, next) => {
     res.header('Cache-Control', 'no-cache, private, no-store, must-revalidate, max-stale=0, post-check=0, pre-check=0');
     const token = req.cookies.access_token ;
-    req.session = {user: null} ;
+    const changep_token = req.cookies.changep_token ;
+    req.session = {user: null, dataPassword: null} ;
     try {
         const data = jwt.verify(token, process.env.SECRET_KEY) ;
         data.accounts = "" ;
@@ -30,12 +31,18 @@ app.use((req, res, next) => {
     } catch (error) {
 
     }
+    try {
+        const dataPassword = jwt.verify(changep_token, process.env.CHANGEP_KEY) ;
+        req.session.dataPassword = dataPassword ;
+    } catch (error) {
+        
+    }
     next() ;
 }) ;
 
 app.get("/", (req, res) => {
     const { user } = req.session ;
-    resetSession() ;
+    resetChangePCookie(req, res) ;
 
     if(!user) {
         res.sendFile(publicPath + "/pages/login.html") ;
@@ -46,6 +53,7 @@ app.get("/", (req, res) => {
 
 app.get("/createAcc", (req, res) => {
     const { user } = req.session ;
+    resetChangePCookie(req, res) ;
 
     if(!user) {
         res.sendFile(publicPath + "/pages/createAcc.html") ;
@@ -56,6 +64,7 @@ app.get("/createAcc", (req, res) => {
 
 app.get("/forgotten", (req, res) => {
     const { user } = req.session ;
+    resetChangePCookie(req, res) ;
 
     if(!user) {
         res.sendFile(publicPath + "/pages/forgotten.html") ;
@@ -66,10 +75,10 @@ app.get("/forgotten", (req, res) => {
 
 app.get("/forgotten/code", (req, res) => {
     const { user } = req.session ;
-    const { email } = req.session ;
+    const { dataPassword } = req.session ;
 
     if(!user) {
-        if(email) {
+        if(dataPassword) {
             res.sendFile(publicPath + "/pages/forgottencode.html") ;
         } else {
             res.redirect("/") ;
@@ -81,6 +90,7 @@ app.get("/forgotten/code", (req, res) => {
 
 app.get("/menu", (req, res) => {
     const { user } = req.session ;
+    resetChangePCookie(req, res) ;
 
     if(user) {
         getAccountsNames(user.email).then(results => {
@@ -99,10 +109,12 @@ app.get("/menu", (req, res) => {
 }) ;
 
 app.get("/auth/signin", (req, res) => {
+    resetChangePCookie(req, res) ;
     res.status(401).sendFile(publicPath + "/pages/signin.html") ;
 }) ;
 
 app.get("/auth/logout", (req, res) => {
+    resetChangePCookie(req, res) ;
     res.status(401).sendFile(publicPath + "/pages/logout.html") ;
 }) ;
 
@@ -198,10 +210,10 @@ app.patch("/editAcc", (req, res) => {
 
 app.patch("/forgotten/changepassword", (req, res) => {
     const { user } = req.session ;
-    const { email } = req.session ;
+    const { dataPassword } = req.session ;
 
     if(!user) {
-        if(email) {
+        if(dataPassword) {
             changePassword(req, res) ;
         } else {
             res.redirect("/") ;
@@ -215,11 +227,9 @@ app.listen(PORT, () => {
     console.log(`Listening on port: ${PORT}`) ;
 }) ;
 
-function resetSession(req, res) {
+function resetChangePCookie(req, res) {
     try {
-        req.session.email = null ;
-        req.session.recoverycode = null ;
-        req.session.codeexpirationtime = null ;
+        res.clearCookie("changep_token") ;
     } catch (error) {
         
     }

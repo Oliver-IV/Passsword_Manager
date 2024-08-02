@@ -12,7 +12,8 @@ function createAccount() {
         last_name_p: inputLastName.value,
         last_name_m: inputMotherLastName.value,
         email: inputEmail.value,
-        password: inputPassword.value
+        password: inputPassword.value,
+        repeatedPassword: inputconfirmPassword.value
     }
 
     fetch("/createAcc",

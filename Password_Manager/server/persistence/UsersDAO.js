@@ -251,7 +251,7 @@ class UsersDAO {
                         "email": email
                     }, 
                     {
-                        $set : { "password": password }
+                        $set : { "password": encrypytAES(password) }
                     }
                 ) ;
 

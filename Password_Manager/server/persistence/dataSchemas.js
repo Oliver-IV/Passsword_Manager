@@ -4,7 +4,7 @@ const userSchema = z.object({
     names: z.string().max(30).regex(/^[a-zA-Z]+$/, { message: 'Only letters allowed' }).min(1),
     last_name_p: z.string().max(30).regex(/^[a-zA-Z]+$/, { message: 'Only letters allowed' }).min(1),
     last_name_m: z.string().max(30).regex(/^[a-zA-Z]+$/, { message: 'Only letters allowed' }).min(1),
-    email: z.string().max(32).email().min(1),
+    email: z.string().email().min(1),
     password: z.string().min(8).regex(/^(.*\d){3}/, { message: 'Password must contain at least 3 numbers' }).min(1),
   });
   
@@ -14,7 +14,7 @@ const userSchema = z.object({
   });
   
   const accountSchema = z.object({
-    name: z.string().min(1).max(18).regex(/^[a-zA-Z0-9]+$/, { message: 'Name must contain only letters and numbers' }),
+    name: z.string().min(1).max(18).regex(/^[a-zA-Z0-9\s]+$/, { message: 'Name must contain only letters, numbers' }),
     user: z.string().min(1).max(30),
     password: z.string().min(1).max(25),
   });

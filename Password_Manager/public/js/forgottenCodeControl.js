@@ -4,7 +4,7 @@ const inputPassword = document.getElementById("password") ;
 
 function changePassword() {
     const body = {
-        recoverycode: inputEmail.value,
+        recoverycode: inputCode.value,
         newPassword: inputPassword.value
     }
     fetch("/forgotten/changepassword", 
