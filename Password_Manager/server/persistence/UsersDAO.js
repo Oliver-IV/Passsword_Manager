@@ -284,9 +284,13 @@ class UsersDAO {
             ) ;
 
             if(existingUser) {
-                
                 const accountIndex = existingUser.accounts.findIndex(account => account.name.toLowerCase() == oldName.toLowerCase()) ;
-                const newAccountIndex = existingUser.accounts.findIndex(account => account.name.toLowerCase() == newAccount.name.toLowerCase()) ;
+                const newAccountIndex = -1 ;
+
+                if(oldName.toLowerCase() != newAccount.name.toLowerCase()) {
+                    newAccountIndex = existingUser.accounts.findIndex(account => account.name.toLowerCase() == newAccount.name.toLowerCase()) ;
+                }
+                
 
                 if(newAccountIndex == -1) {
                     if(accountIndex != -1) {

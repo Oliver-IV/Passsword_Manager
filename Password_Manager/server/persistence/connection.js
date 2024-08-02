@@ -1,12 +1,16 @@
 import dotenv from "dotenv";
-import { MongoClient } from "mongodb";
+import { MongoClient, ServerApiVersion } from "mongodb";
 
 dotenv.config() ;
 
 const connectionString = process.env.CONNECTION_STRING ;
 
-console.log(connectionString) ;
-
-const client = new MongoClient(connectionString);
+const client = new MongoClient(connectionString, {
+    serverApi: {
+      version: ServerApiVersion.v1,
+      strict: true,
+      deprecationErrors: true,
+    }
+  });
 
 export default client ;
