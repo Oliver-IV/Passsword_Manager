@@ -238,7 +238,6 @@ class UsersDAO {
             if (error instanceof DataError) {
                 throw new Error(error.message);
             } else {
-                console.error('Original error: ', error); // Para depuración
                 throw new Error("There's a problem with the connection...");
             }
         } finally {

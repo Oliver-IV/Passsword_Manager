@@ -7,39 +7,45 @@ const inputconfirmPassword = document.getElementById("confirmPassword") ;
 const btnCreateAcc = document.getElementById("createAcc") ;
 
 function createAccount() {
-    const body = {
-        name: inputName.value,
-        last_name_p: inputLastName.value,
-        last_name_m: inputMotherLastName.value,
-        email: inputEmail.value,
-        password: inputPassword.value,
-        repeatedPassword: inputconfirmPassword.value
-    }
+    const responseCaptcha = grecaptcha.getResponse() ;
 
-    fetch("/createAcc",
-        {
-            method: 'POST',
-            headers: {
-            'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(body) 
+    if(!(responseCaptcha == "" || responseCaptcha == undefined || responseCaptcha == null)) {
+        const body = {
+            name: inputName.value,
+            last_name_p: inputLastName.value,
+            last_name_m: inputMotherLastName.value,
+            email: inputEmail.value,
+            password: inputPassword.value,
+            repeatedPassword: inputconfirmPassword.value
         }
-    ).then(response => {
-        if(response.ok) {
-            if (response.ok) {
-                Swal.fire("Account Created", "Your account has been created successfully!", "success").then(() => {
-                    window.location.href = '/';
-                }) ;
+
+        fetch("/createAcc",
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
             }
-        } else {
-            return response.json().then(errorMessage => {
-                throw new Error(errorMessage.error);
-            });
-        }
-    }).catch(err => {
-        Swal.fire("Error", err.message, "error") ;
-    });
+        ).then(response => {
+            if (response.ok) {
+                if (response.ok) {
+                    Swal.fire("Account Created", "Your account has been created successfully!", "success").then(() => {
+                        window.location.href = '/';
+                    });
+                }
+            } else {
+                return response.json().then(errorMessage => {
+                    throw new Error(errorMessage.error);
+                });
+            }
+        }).catch(err => {
+            Swal.fire("Error", err.message, "error");
+        });
 
+    } else {
+        Swal.fire("Error", 'You must validate Captcha before continuing', "error") ;
+    }
 }
 
 const init = () => {
