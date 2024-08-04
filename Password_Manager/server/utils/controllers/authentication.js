@@ -140,7 +140,7 @@ function addAccount(req, res) {
     try {
         const { user } = req.session;
 
-        const account = new AccountDTO(req.body.name, req.body.user, req.body.password);
+        const account = new AccountDTO(req.body.name.trim(), req.body.user.trim(), req.body.password.trim());
         if (validateAccount(account)) {
             usersDAO.addAccount(user.email, account).then(results => {
                 res.redirect("/menu");
@@ -173,7 +173,7 @@ function editAccount(req, res) {
     try {
         const { user } = req.session;
 
-        const account = new AccountDTO(req.body.name, req.body.user, req.body.password);
+        const account = new AccountDTO(req.body.name.trim(), req.body.user.trim(), req.body.password.trim());
         if (validateAccount(account)) {
             usersDAO.editAccount(user.email, req.body.oldName, account).then(results => {
                 res.status(200).send(results);

@@ -1,26 +1,26 @@
 import { z } from "zod" ;
 
 const userSchema = z.object({
-    names: z.string().max(30).regex(/^[\p{L}\s]+$/u, { message: 'Only letters allowed' }).min(1),
-    last_name_p: z.string().max(30).regex(/^[\p{L}\s]+$/u, { message: 'Only letters allowed' }).min(1),
-    last_name_m: z.string().max(30).regex(/^[\p{L}\s]+$/u, { message: 'Only letters allowed' }).min(1),  
-    email: z.string().email().min(1),
-    password: z.string().min(8).regex(/^(.*\d){3}/, { message: 'Password must contain at least 3 numbers' }).min(1),
+    names: z.string().trim().max(30).regex(/^[\p{L}\s]+$/u, { message: 'Only letters allowed' }).min(1),
+    last_name_p: z.string().trim().max(30).regex(/^[\p{L}\s]+$/u, { message: 'Only letters allowed' }).min(1),
+    last_name_m: z.string().trim().max(30).regex(/^[\p{L}\s]+$/u, { message: 'Only letters allowed' }).min(1),  
+    email: z.string().trim().email().min(1),
+    password: z.string().trim().min(8).regex(/^(.*\d){3}/, { message: 'Password must contain at least 3 numbers' }).min(1),
   });
   
   const loginSchema = z.object({
-    email: z.string().email().min(1),
-    password: z.string().min(1),
+    email: z.string().trim().email().min(1),
+    password: z.string().trim().min(1),
   });
   
   const accountSchema = z.object({
-    name: z.string().min(1).max(18).regex(/^[\p{L}\p{N}\s]+$/u, { message: 'Name must contain only letters, numbers' }),
-    user: z.string().min(1).max(30),
-    password: z.string().min(1).max(25),
+    name: z.string().trim().min(1).max(18).regex(/^[\p{L}\p{N}\s]+$/u, { message: 'Name must contain only letters, numbers' }),
+    user: z.string().trim().min(1).max(30),
+    password: z.string().trim().min(1).max(25),
   });
 
   const passwordSchema = z.object({
-    password: z.string().min(8).regex(/^(.*\d){3}/, { message: 'Password must contain at least 3 numbers' }).min(1)
+    password: z.string().trim().min(8).regex(/^(.*\d){3}/, { message: 'Password must contain at least 3 numbers' }).min(1)
   }) ;
 
   function validateUser(user) {
