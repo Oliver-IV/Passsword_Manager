@@ -252,51 +252,30 @@ function copyPassword(i) {
     
 }
 
-function setUsernameInEdit(accountName) {
-    fetch(`/account/user?name=${accountName}`, {
+function setAccountDetailsInEdit(accountName) {
+    fetch(`/account/edit?name=${accountName}`, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json'
+            'Content-Type': 'application/json'
         }
-      }).then(response => {
+    }).then(response => {
         if (response.ok) {
-          response.text().then(text => {
-                inputUsernameEdit.value = text ;
+            return response.json().then(data => {
+                inputUsernameEdit.value = data.user;
+                inputPasswordEdit.value = data.password;
             });
-          } else if (response.status === 401) {
-              window.location.href = "/auth/signin";
-          } else {
+        } else if (response.status === 401) {
+            window.location.href = "/auth/signin";
+        } else {
             return response.json().then(errorMessage => {
                 throw new Error(errorMessage.error);
             });
-          }
-      }).catch(err => {
+        }
+    }).catch(err => {
         Swal.fire("Error", err.message, "error");
-      });
+    });
 }
 
-function setPasswordInEdit(accountName) {
-    fetch(`/account/password?password=${accountName}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }).then(response => {
-        if (response.ok) {
-          response.text().then(text => {
-                inputPasswordEdit.value = text ;
-            });
-          } else if (response.status === 401) {
-              window.location.href = "/auth/signin";
-          } else {
-            return response.json().then(errorMessage => {
-                throw new Error(errorMessage.error);
-            });
-          }
-      }).catch(err => {
-        Swal.fire("Error", err.message, "error");
-      });
-}
 
 function editAccount() {
 

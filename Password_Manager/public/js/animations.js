@@ -23,8 +23,7 @@ function showEditAccount(i) {
             container.classList.remove('hidden');
             oldNameEdit = accountName ;
             inputNameEdit.value = accountName ;
-            setUsernameInEdit(accountName) ;
-            setPasswordInEdit(accountName) ;
+            setAccountDetailsInEdit(accountName) ;
             setTimeout(() => {
                 container.classList.add('visible');
                 container.scrollIntoView({ behavior: 'smooth', block: 'end' });

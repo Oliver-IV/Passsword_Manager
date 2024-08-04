@@ -6,7 +6,7 @@ import cookieParser from "cookie-parser";
 import { PORT } from "./utils/config.js"
 import jwt from "jsonwebtoken" ;
 import dotenv from "dotenv" ;
-import { login, createUser, getAccountsNames, getPassword, getUser, addAccount, deleteAccount, editAccount, existUser, changePassword, generateCodeForPassword } from "./utils/controllers/authentication.js"
+import { login, createUser, getAccountsNames, getPassword, getUser, addAccount, deleteAccount, editAccount, existUser, changePassword, generateCodeForPassword, getAccountDetails } from "./utils/controllers/authentication.js"
 import { addAbortSignal } from "stream" ;
 
 dotenv.config() ;
@@ -133,6 +133,16 @@ app.get("/account/password", (req, res) => {
 
     if (user) {
         getPassword(req, res) ;
+    } else {
+        res.redirect("/auth/signin") ;
+    }
+}) ;
+
+app.get("/account/edit", (req, res) => {
+    const { user } = req.session ;
+
+    if (user) {
+        getAccountDetails(req, res) ;
     } else {
         res.redirect("/auth/signin") ;
     }

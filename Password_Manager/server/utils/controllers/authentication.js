@@ -4,7 +4,7 @@ import AccountDTO from "../../dtos/AccountDTO.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
-import { validateUser, validateAccount, validateLogin } from "../../persistence/dataSchemas.js"
+import { validateUser, validateAccount, validateLogin, validatePassword } from "../../persistence/dataSchemas.js"
 import transport from "./mailer.js";
 import CryptoJS from "crypto-js";
 
@@ -118,6 +118,23 @@ function getPassword(req, res) {
 
 }
 
+const getAccountDetails = async (req, res) => {
+    try {
+        const { user } = req.session;
+        const { name } = req.query;
+
+        usersDAO.getAccountDetails(user.email, name).then(results => {
+            res.status(200).json(results);
+        }).catch(err => {
+            console.error(err);
+            res.status(400).json({ error: err.message || "Unknown Error" });
+        });
+    } catch (error) {
+        res.status(400).json({ error: "Unknown Error" });
+    }
+}
+
+
 function addAccount(req, res) {
 
     try {
@@ -230,7 +247,7 @@ function changePassword(req, res) {
     if (expirationTime > Date.now()) {
         if (userRecoveryCode === recoveryCode) {
             try {
-                if (validateLogin({ email: email, password: req.body.newPassword })) {
+                if (validatePassword(req.body.newPassword)) {
                     usersDAO.changePassword(email, req.body.newPassword).then(results => {
                         res.status(200).send("The password has been changed successfully!");
                     });
@@ -245,7 +262,7 @@ function changePassword(req, res) {
 
 }
 
-export { login, createUser, getAccountsNames, getUser, getPassword, addAccount, deleteAccount, editAccount, existUser, changePassword, generateCodeForPassword };
+export { login, createUser, getAccountsNames, getUser, getPassword, addAccount, deleteAccount, editAccount, existUser, changePassword, generateCodeForPassword, getAccountDetails };
 
 function generateRecoveryCode() {
     const length = 6;

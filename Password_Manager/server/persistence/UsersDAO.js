@@ -204,6 +204,49 @@ class UsersDAO {
         }
     }
 
+    async getAccountDetails(email, name) {
+        try {
+            await client.connect();
+    
+            const collection = client.db("bd_password_manager").collection("users");
+    
+            const existingUser = await collection.findOne({
+                email: email
+            });
+    
+            if (existingUser) {
+                let userDetails = null;
+                existingUser.accounts.forEach(account => {
+                    if (account.name.toLowerCase() === name.toLowerCase()) {
+                        userDetails = {
+                            user: account.user,
+                            password: decryptAES(account.password)
+                        };
+                    }
+                });
+    
+                if (userDetails) {
+                    return userDetails;
+                } else {
+                    throw new DataError("There's an error with your data...");
+                }
+            } else {
+                throw new DataError("There's an error with your data...");
+            }
+    
+        } catch (error) {
+            if (error instanceof DataError) {
+                throw new Error(error.message);
+            } else {
+                console.error('Original error: ', error); // Para depuración
+                throw new Error("There's a problem with the connection...");
+            }
+        } finally {
+            await client.close();
+        }
+    }
+    
+
     async existUser(email) {
         try {
             await client.connect() ;

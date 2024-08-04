@@ -19,6 +19,10 @@ const userSchema = z.object({
     password: z.string().min(1).max(25),
   });
 
+  const passwordSchema = z.object({
+    password: z.string().min(8).regex(/^(.*\d){3}/, { message: 'Password must contain at least 3 numbers' }).min(1)
+  }) ;
+
   function validateUser(user) {
     const validation = userSchema.safeParse(user) ;
 
@@ -106,4 +110,31 @@ function validateLogin(user) {
   }
 }
 
-export { validateUser, validateAccount, validateLogin } ;
+function validatePassword(password) {
+  const validation = loginSchema.safeParse({password: password});
+
+  if (!validation.success) {
+    validation.error.errors.forEach(err => {
+      switch (err.code) {
+        case "invalid_string":
+              if(err.path[0] == 'password') {
+                throw new Error('Your password must contain at least 3 numbers') ;
+              } else {
+                throw new Error("There's an error with your data") ;
+              }
+            case "too_small":
+              if(err.minimum == 1) {
+                throw new Error('You must fill the empty Fields') ;
+              } else if(err.minimum == 8) {
+                throw new Error('Your password must contain at least 8 characters') ;
+              }
+            default:
+              throw new Error("There's an error with your data")
+      }
+    });
+  } else {
+    return true;
+  }
+}
+
+export { validateUser, validateAccount, validateLogin, validatePassword } ;
