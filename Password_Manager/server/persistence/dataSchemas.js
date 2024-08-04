@@ -1,9 +1,9 @@
 import { z } from "zod" ;
 
 const userSchema = z.object({
-    names: z.string().max(30).regex(/^[a-zA-Z]+$/, { message: 'Only letters allowed' }).min(1),
-    last_name_p: z.string().max(30).regex(/^[a-zA-Z]+$/, { message: 'Only letters allowed' }).min(1),
-    last_name_m: z.string().max(30).regex(/^[a-zA-Z]+$/, { message: 'Only letters allowed' }).min(1),
+    names: z.string().max(30).regex(/^[a-zA-Z\s]+$/, { message: 'Only letters allowed' }).min(1),
+    last_name_p: z.string().max(30).regex(/^[a-zA-Z\s]+$/, { message: 'Only letters allowed' }).min(1),
+    last_name_m: z.string().max(30).regex(/^[a-zA-Z\s]+$/, { message: 'Only letters allowed' }).min(1),  
     email: z.string().email().min(1),
     password: z.string().min(8).regex(/^(.*\d){3}/, { message: 'Password must contain at least 3 numbers' }).min(1),
   });
@@ -30,6 +30,7 @@ const userSchema = z.object({
         validation.error.errors.forEach(err => {
           switch (err.code) {
             case "invalid_string":
+              console.log(err) ;
               if(err.path[0] == 'names' || err.path[0] == 'last_name_p' || err.path[0] == 'last_name_m') {
                 throw new Error("Only letters are allowed on Name and Last Names") ;
               } else if(err.path[0] == 'email') {
@@ -111,7 +112,7 @@ function validateLogin(user) {
 }
 
 function validatePassword(password) {
-  const validation = loginSchema.safeParse({password: password});
+  const validation = passwordSchema.safeParse({password: password});
 
   if (!validation.success) {
     validation.error.errors.forEach(err => {
